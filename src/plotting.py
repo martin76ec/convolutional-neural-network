@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 def read_csv_log(log_dir):
     csv_path = os.path.join(log_dir, "metrics.csv")
     if not os.path.exists(csv_path):
-        candidates = sorted(glob.glob(os.path.join(log_dir, "version_*", "metrics.csv")))
+        candidates = glob.glob(os.path.join(log_dir, "version_*", "metrics.csv"))
+        # highest numeric version (lexicographic sort would put version_9 after version_10)
+        candidates.sort(key=lambda p: int(os.path.basename(os.path.dirname(p)).rsplit("_", 1)[-1]))
         if candidates:
             csv_path = candidates[-1]
 

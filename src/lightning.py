@@ -24,9 +24,9 @@ class LightningWrapper(LP.LightningModule):
         x, y = batch
         logits = self(x)
         loss = F.cross_entropy(logits, y)
-        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         self.train_acc(logits, y)
-        self.log("train_acc", self.train_acc, prog_bar=True)
+        self.log("train_acc", self.train_acc, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch, _):
