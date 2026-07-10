@@ -1,10 +1,16 @@
 import os
 import csv
+import glob
 import matplotlib.pyplot as plt
 
 
 def read_csv_log(log_dir):
     csv_path = os.path.join(log_dir, "metrics.csv")
+    if not os.path.exists(csv_path):
+        candidates = sorted(glob.glob(os.path.join(log_dir, "version_*", "metrics.csv")))
+        if candidates:
+            csv_path = candidates[-1]
+
     train_loss, val_loss, train_acc, val_acc = [], [], [], []
 
     with open(csv_path) as f:
