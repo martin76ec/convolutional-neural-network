@@ -49,3 +49,9 @@ Thumbs.db
 # Project
 .env
 *.log
+
+lightning_logs
+logs/
+checkpoints/
+data/
+*.png

@@ -2,32 +2,43 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class CNN(nn.Module):
-    def __init__(self, num_layers: int, base_channels: int, num_classes: int):
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.25):
         super().__init__()
-        self.layers = nn.ModuleList()
-        in_channels = 3
-        current_channels = base_channels
-
-        for i in range(num_layers):
-            self.layers.append(
-                nn.Conv2d(
-                    in_channels, out_channels=current_channels, kernel_size=3, padding=1
-                )
-            )
-
-            in_channels = current_channels
-
-            if i % 2 == 1:
-                current_channels *= 2
-
-        self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(in_channels, num_classes)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.dropout = nn.Dropout2d(dropout)
 
     def forward(self, x):
-        for layer in self.layers:
-            x = F.relu(layer(x))
+        x = F.relu(self.bn(self.conv(x)))
+        x = self.pool(x)
+        x = self.dropout(x)
+        return x
 
-        x = self.pool(x).squeeze(-1).squeeze(-1)
 
-        return self.fc(x)
+class CNN(nn.Module):
+    def __init__(self, num_classes: int, base_channels: int = 32, dropout: float = 0.25):
+        super().__init__()
+
+        self.block1 = ConvBlock(3, base_channels, dropout)
+        self.block2 = ConvBlock(base_channels, base_channels * 2, dropout)
+        self.block3 = ConvBlock(base_channels * 2, base_channels * 4, dropout)
+        self.block4 = ConvBlock(base_channels * 4, base_channels * 8, dropout)
+
+        self.gap = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc1 = nn.Linear(base_channels * 8, 256)
+        self.fc2 = nn.Linear(256, num_classes)
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x):
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.block4(x)
+
+        x = self.gap(x).squeeze(-1).squeeze(-1)
+        x = F.relu(self.fc1(x))
+        x = self.drop(x)
+        x = self.fc2(x)
+        return x
