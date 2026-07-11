@@ -51,9 +51,10 @@ Thumbs.db
 *.log
 
 lightning_logs
-logs/
+# logs/
 checkpoints/
 data/
-*.png
+# *.png
 
 scripts
+prereadme.md
